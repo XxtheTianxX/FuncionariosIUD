@@ -5,6 +5,9 @@ import java.awt.*;
 import com.funcionarios.project.controller.FuncionarioController;
 import com.funcionarios.project.domain.Funcionario;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import com.toedter.calendar.JDateChooser;
@@ -22,6 +25,12 @@ public class FuncionarioForm extends JFrame {
 
     // Componentes de la segunda pestaña
     private JComboBox<Funcionario> funcionariosComboBox;
+
+    // Componentes del formulario de actualización
+    private JTextField numeroIdentificacionFieldUpdate, nombresFieldUpdate, apellidosFieldUpdate, direccionFieldUpdate, telefonoFieldUpdate;
+    private JComboBox<String> tipoIdentificacionComboBoxUpdate, estadoCivilComboBoxUpdate, sexoComboBoxUpdate;
+    private JDateChooser fechaNacimientoChooserUpdate;
+
 
     public FuncionarioForm(FuncionarioController funcionarioController) {
         this.funcionarioController = funcionarioController;
@@ -49,7 +58,7 @@ public class FuncionarioForm extends JFrame {
         nombresField = new JTextField(20);
         apellidosField = new JTextField(20);
         estadoCivilComboBox = new JComboBox<>(new String[]{"Soltero(a)", "Casado(a)", "Divorciado(a)", "Viudo(a)"});
-        sexoComboBox = new JComboBox<>(new String[]{"Masculino", "Femenino"});
+        sexoComboBox = new JComboBox<>(new String[]{"Masculino", "Femenino","Otros"});
         direccionField = new JTextField(20);
         telefonoField = new JTextField(20);
         fechaNacimientoChooser = new JDateChooser();
@@ -87,20 +96,60 @@ public class FuncionarioForm extends JFrame {
 
         // ComboBox para seleccionar funcionario
         funcionariosComboBox = new JComboBox<>();
-        gbc.gridx = 1;
+        funcionariosComboBox.addActionListener(e -> loadFuncionarioDetails()); // Aquí se llama a loadFuncionarioDetails cuando cambia la selección
+        gbc.gridx = 3;
         updateDeletePanel.add(funcionariosComboBox, gbc);
+
+        // Campos de formulario para actualización
+        gbc.gridy = 1; gbc.gridx = 0; updateDeletePanel.add(new JLabel("Número Identificación:"), gbc);
+        tipoIdentificacionComboBoxUpdate = new JComboBox<>(new String[]{"CC", "TI", "CE", "Pasaporte"});
+        gbc.gridx = 3; updateDeletePanel.add(tipoIdentificacionComboBoxUpdate, gbc);
+
+        gbc.gridy = 2; gbc.gridx = 0; updateDeletePanel.add(new JLabel("Número Identificación:"), gbc);
+        numeroIdentificacionFieldUpdate = new JTextField(20);
+        gbc.gridx = 3; updateDeletePanel.add(numeroIdentificacionFieldUpdate, gbc);
+
+        gbc.gridy = 3; gbc.gridx = 0; updateDeletePanel.add(new JLabel("Nombres:"), gbc);
+        nombresFieldUpdate = new JTextField(20);
+        gbc.gridx = 3; updateDeletePanel.add(nombresFieldUpdate, gbc);
+
+        gbc.gridy = 4; gbc.gridx = 0; updateDeletePanel.add(new JLabel("Apellidos:"), gbc);
+        apellidosFieldUpdate = new JTextField(20);
+        gbc.gridx = 3; updateDeletePanel.add(apellidosFieldUpdate, gbc);
+
+        gbc.gridy = 5; gbc.gridx = 0; updateDeletePanel.add(new JLabel("Estado Civil:"), gbc);
+        estadoCivilComboBoxUpdate = new JComboBox<>(new String[]{"Soltero(a)", "Casado(a)", "Divorciado(a)", "Viudo(a)"});
+        gbc.gridx = 3; updateDeletePanel.add(estadoCivilComboBoxUpdate, gbc);
+
+        gbc.gridy = 6; gbc.gridx = 0; updateDeletePanel.add(new JLabel("Sexo:"), gbc);
+        sexoComboBoxUpdate = new JComboBox<>(new String[]{"Masculino", "Femenino"});
+        gbc.gridx = 3; updateDeletePanel.add(sexoComboBoxUpdate, gbc);
+
+        gbc.gridy = 7; gbc.gridx = 0; updateDeletePanel.add(new JLabel("Dirección:"), gbc);
+        direccionFieldUpdate = new JTextField(20);
+        gbc.gridx = 3; updateDeletePanel.add(direccionFieldUpdate, gbc);
+
+        gbc.gridy = 8; gbc.gridx = 0; updateDeletePanel.add(new JLabel("Teléfono:"), gbc);
+        telefonoFieldUpdate = new JTextField(20);
+        gbc.gridx = 3; updateDeletePanel.add(telefonoFieldUpdate, gbc);
+
+        gbc.gridy = 9; gbc.gridx = 0; updateDeletePanel.add(new JLabel("Fecha Nacimiento:"), gbc);
+        fechaNacimientoChooserUpdate = new JDateChooser();
+        fechaNacimientoChooserUpdate.setDateFormatString("yyyy-MM-dd");
+        gbc.gridx = 3; updateDeletePanel.add(fechaNacimientoChooserUpdate, gbc);
 
         // Botón de actualización
         JButton updateButton = new JButton("Actualizar");
         updateButton.addActionListener(e -> updateFuncionario());
-        gbc.gridy = 1; gbc.gridx = 0;
+        gbc.gridy = 10; gbc.gridx = 1;
         updateDeletePanel.add(updateButton, gbc);
 
         // Botón de eliminación
         JButton deleteButton = new JButton("Eliminar");
         deleteButton.addActionListener(e -> deleteFuncionario());
-        gbc.gridx = 1;
+        gbc.gridy = 10; gbc.gridx = 3;
         updateDeletePanel.add(deleteButton, gbc);
+
 
         // Añadir la segunda pestaña al JTabbedPane
         tabbedPane.addTab("Crear y Listar Funcionarios", createAndListPanel);
@@ -112,6 +161,29 @@ public class FuncionarioForm extends JFrame {
         // Cargar funcionarios en el ComboBox
         loadFuncionariosList();
     }
+
+    private void loadFuncionarioDetails() {
+        Funcionario selectedFuncionario = (Funcionario) funcionariosComboBox.getSelectedItem();
+        if (selectedFuncionario != null) {
+            numeroIdentificacionFieldUpdate.setText(selectedFuncionario.getNumeroIdentificacion());
+            nombresFieldUpdate.setText(selectedFuncionario.getNombres());
+            apellidosFieldUpdate.setText(selectedFuncionario.getApellidos());
+            estadoCivilComboBoxUpdate.setSelectedItem(selectedFuncionario.getEstadoCivil());
+            sexoComboBoxUpdate.setSelectedItem(selectedFuncionario.getSexo());
+            direccionFieldUpdate.setText(selectedFuncionario.getDireccion());
+            telefonoFieldUpdate.setText(selectedFuncionario.getTelefono());
+
+            LocalDate fechaNacimientoLocalDate = selectedFuncionario.getFechaNacimiento();
+            if (fechaNacimientoLocalDate != null) {
+                Date fechaNacimientoDate = Date.from(fechaNacimientoLocalDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                fechaNacimientoChooserUpdate.setDate(fechaNacimientoDate);
+            } else {
+                fechaNacimientoChooserUpdate.setDate(null);
+            }
+
+        }
+    }
+
 
     private void createFuncionario() {
         if (isFormValid()) {
@@ -148,27 +220,52 @@ public class FuncionarioForm extends JFrame {
                 fechaNacimientoChooser.getDate() != null;
     }
 
+    private boolean isUpdateFormValid() {
+        return !numeroIdentificacionFieldUpdate.getText().trim().isEmpty() &&
+                !nombresFieldUpdate.getText().trim().isEmpty() &&
+                !apellidosFieldUpdate.getText().trim().isEmpty() &&
+                !direccionFieldUpdate.getText().trim().isEmpty() &&
+                !telefonoFieldUpdate.getText().trim().isEmpty() &&
+                fechaNacimientoChooserUpdate.getDate() != null;
+    }
+
+
     private void updateFuncionario() {
         Funcionario selectedFuncionario = (Funcionario) funcionariosComboBox.getSelectedItem();
-        if (selectedFuncionario != null && isFormValid()) {
+        if (selectedFuncionario != null && isUpdateFormValid()) {
             try {
-                selectedFuncionario.setTipoIdentificacion(Objects.requireNonNull(tipoIdentificacionComboBox.getSelectedItem()).toString());
-                selectedFuncionario.setNumeroIdentificacion(numeroIdentificacionField.getText().trim());
-                selectedFuncionario.setNombres(nombresField.getText().trim());
-                selectedFuncionario.setApellidos(apellidosField.getText().trim());
-                selectedFuncionario.setEstadoCivil(Objects.requireNonNull(estadoCivilComboBox.getSelectedItem()).toString());
-                selectedFuncionario.setSexo(Objects.requireNonNull(sexoComboBox.getSelectedItem()).toString().charAt(0));
-                selectedFuncionario.setDireccion(direccionField.getText().trim());
-                selectedFuncionario.setTelefono(telefonoField.getText().trim());
-                selectedFuncionario.setFechaNacimiento(new java.sql.Date(fechaNacimientoChooser.getDate().getTime()).toLocalDate());
+                selectedFuncionario.setTipoIdentificacion(Objects.requireNonNull(tipoIdentificacionComboBoxUpdate.getSelectedItem()).toString());
+                selectedFuncionario.setNumeroIdentificacion(numeroIdentificacionFieldUpdate.getText().trim());
+                selectedFuncionario.setNombres(nombresFieldUpdate.getText().trim());
+                selectedFuncionario.setApellidos(apellidosFieldUpdate.getText().trim());
+                selectedFuncionario.setEstadoCivil(Objects.requireNonNull(estadoCivilComboBoxUpdate.getSelectedItem()).toString());
+                selectedFuncionario.setSexo(Objects.requireNonNull(sexoComboBoxUpdate.getSelectedItem()).toString().charAt(0));
+                selectedFuncionario.setDireccion(direccionFieldUpdate.getText().trim());
+                selectedFuncionario.setTelefono(telefonoFieldUpdate.getText().trim());
+                selectedFuncionario.setFechaNacimiento(new java.sql.Date(fechaNacimientoChooserUpdate.getDate().getTime()).toLocalDate());
 
                 funcionarioController.updateFuncionario(selectedFuncionario.getIdFuncionario(), selectedFuncionario);
                 JOptionPane.showMessageDialog(this, "Funcionario actualizado exitosamente");
+                clearUpdateFormFields();
+                isUpdateFormValid();
                 loadFuncionariosList();
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(this, "Error al actualizar funcionario: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
+
         }
+    }
+
+    private void clearUpdateFormFields() {
+        tipoIdentificacionComboBoxUpdate.setSelectedIndex(0);
+        numeroIdentificacionFieldUpdate.setText("");
+        nombresFieldUpdate.setText("");
+        apellidosFieldUpdate.setText("");
+        estadoCivilComboBoxUpdate.setSelectedIndex(0);
+        sexoComboBoxUpdate.setSelectedIndex(0);
+        direccionFieldUpdate.setText("");
+        telefonoFieldUpdate.setText("");
+        fechaNacimientoChooserUpdate.setDate(null);
     }
 
     private void deleteFuncionario() {

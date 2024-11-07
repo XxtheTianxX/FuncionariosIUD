@@ -1,5 +1,6 @@
 package com.funcionarios.project.domain;
 
+import com.toedter.calendar.JDateChooser;
 import java.time.LocalDate;
 
 public class Funcionario {
